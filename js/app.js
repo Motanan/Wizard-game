@@ -8,13 +8,16 @@
 
   const els = {
     stars: document.getElementById("stars"),
+    wizardSvg: document.getElementById("wizardSvg"),
     speechText: document.getElementById("speechText"),
     speechBubble: document.getElementById("speechBubble"),
     progressWrap: document.getElementById("progressWrap"),
     progressFill: document.getElementById("progressFill"),
+    progressExtra: document.getElementById("progressExtra"),
     panels: {
       welcome: document.getElementById("panelWelcome"),
       category: document.getElementById("panelCategory"),
+      difficulty: document.getElementById("panelDifficulty"),
       question: document.getElementById("panelQuestion"),
       guess: document.getElementById("panelGuess"),
       win: document.getElementById("panelWin"),
@@ -23,6 +26,8 @@
     answers: document.getElementById("answers"),
     guessEmoji: document.getElementById("guessEmoji"),
     guessName: document.getElementById("guessName"),
+    loseText: document.getElementById("loseText"),
+    revealWrap: document.getElementById("revealWrap"),
     revealList: document.getElementById("revealList"),
     btnStart: document.getElementById("btnStart"),
     btnCorrect: document.getElementById("btnCorrect"),
@@ -30,6 +35,13 @@
     btnPlayAgainWin: document.getElementById("btnPlayAgainWin"),
     btnPlayAgainLose: document.getElementById("btnPlayAgainLose"),
     confetti: document.getElementById("confetti"),
+    btnHelp: document.getElementById("btnHelp"),
+    btnHelpClose: document.getElementById("btnHelpClose"),
+    helpOverlay: document.getElementById("helpOverlay"),
+    btnMute: document.getElementById("btnMute"),
+    starsBadge: document.getElementById("starsBadge"),
+    starsCount: document.getElementById("starsCount"),
+    toast: document.getElementById("toast"),
   };
 
   /* ---------------- خلفية النجوم ---------------- */
@@ -49,6 +61,112 @@
       frag.appendChild(star);
     }
     els.stars.appendChild(frag);
+  }
+
+  /* ---------------- تخزين محلي (النجوم والصوت) ---------------- */
+
+  const STORAGE_KEYS = { stars: "merlin_stars", muted: "merlin_muted" };
+
+  function safeGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      /* تخزين غير متاح (وضع خاص مثلاً) — نكمل بدون حفظ */
+    }
+  }
+
+  /* ---------------- تعابير وجه الساحر ---------------- */
+
+  function setWizardState(name) {
+    els.wizardSvg.dataset.state = name;
+  }
+
+  /* ---------------- الصوت (اختياري وقابل للكتم) ---------------- */
+
+  const sound = (() => {
+    let ctx = null;
+    function getCtx() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!ctx) ctx = new AC();
+      if (ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }
+    function tone(freq, { start = 0, duration = 0.16, type = "sine", gain = 0.16 } = {}) {
+      if (state.muted) return;
+      const c = getCtx();
+      if (!c) return;
+      const t0 = c.currentTime + start;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+      osc.connect(g).connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.03);
+    }
+    return {
+      tap: () => tone(500, { duration: 0.07, type: "triangle", gain: 0.1 }),
+      win: () => {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+          tone(f, { start: i * 0.12, duration: 0.22, type: "triangle", gain: 0.15 })
+        );
+      },
+      gentle: () => {
+        tone(392, { duration: 0.18, gain: 0.12 });
+        tone(329.63, { start: 0.16, duration: 0.24, gain: 0.1 });
+      },
+    };
+  })();
+
+  function renderMuteBtn() {
+    els.btnMute.textContent = state.muted ? "🔇" : "🔊";
+    els.btnMute.setAttribute("aria-pressed", String(state.muted));
+  }
+
+  /* ---------------- النجوم (نظام التقدّم) ---------------- */
+
+  const MILESTONES = [3, 5, 10, 20, 50, 100];
+
+  function renderStars() {
+    els.starsCount.textContent = state.stars;
+  }
+
+  function addStar() {
+    state.stars += 1;
+    safeSet(STORAGE_KEYS.stars, String(state.stars));
+    renderStars();
+    els.starsBadge.classList.remove("bump");
+    void els.starsBadge.offsetWidth;
+    els.starsBadge.classList.add("bump");
+    if (MILESTONES.includes(state.stars)) {
+      showToast(`برافو! جمعت ${state.stars} نجمة سحرية! 🌟`);
+    }
+  }
+
+  let toastTimer = null;
+  function showToast(text) {
+    clearTimeout(toastTimer);
+    els.toast.textContent = text;
+    els.toast.hidden = false;
+    void els.toast.offsetWidth;
+    els.toast.classList.add("show");
+    toastTimer = setTimeout(() => {
+      els.toast.classList.remove("show");
+      setTimeout(() => {
+        els.toast.hidden = true;
+      }, 300);
+    }, 2400);
   }
 
   /* ---------------- كلام الساحر (تأثير الكتابة) ---------------- */
@@ -86,9 +204,22 @@
     });
   }
 
-  function setProgress(percent, visible) {
+  function setProgress(percent, visible, extraLabel) {
     els.progressWrap.hidden = !visible;
-    if (visible) els.progressFill.style.width = `${percent}%`;
+    if (visible) {
+      els.progressFill.style.width = `${percent}%`;
+      els.progressExtra.textContent = extraLabel || "";
+    }
+  }
+
+  /* ---------------- حماية من الضغط المزدوج ---------------- */
+
+  function guard(fn) {
+    return (...args) => {
+      if (state.busy) return;
+      state.busy = true;
+      fn(...args);
+    };
   }
 
   /* ---------------- حالة اللعبة ---------------- */
@@ -96,15 +227,19 @@
   const state = {
     mode: null,
     engine: null,
-    numberRange: { min: 1, max: 100 },
+    busy: false,
+    stars: parseInt(safeGet(STORAGE_KEYS.stars) || "0", 10) || 0,
+    muted: safeGet(STORAGE_KEYS.muted) === "1",
   };
 
   function resetToCategory() {
     state.mode = null;
     state.engine = null;
+    setWizardState("idle");
     setProgress(0, false);
     say("اختار حاجة يا صاحبي، وأنا هخمّنها بالسحر! 🔮");
     showPanel("category");
+    state.busy = false;
   }
 
   /* ---------------- بدء اللعبة حسب الفئة ---------------- */
@@ -113,18 +248,28 @@
     state.mode = mode;
 
     if (mode === "number") {
-      state.engine = new NumberEngine(1, 100);
-      say("فكّر في رقم من 1 لحد 100... وقولّي لمّا تكون جاهز! 🔢");
+      setWizardState("idle");
+      say("اختار مستوى الصعوبة اللي يناسبك! 🎚️");
       setProgress(0, false);
-      renderReadyButton(askNumberQuestion);
+      showPanel("difficulty");
+      state.busy = false;
       return;
     }
 
     const data = GAME_DATA[mode];
     state.engine = new GuessEngine(data.questions, data.entities);
+    setWizardState("idle");
     say(`فكّر في ${data.noun}، وأنا هبدأ أسألك أسئلة! 🧠`);
-    setProgress(4, true);
+    setProgress(4, true, "سؤال 1");
     renderReadyButton(askNextQuestion);
+  }
+
+  function beginNumberRound(min, max) {
+    state.engine = new NumberEngine(min, max);
+    setWizardState("idle");
+    say(`فكّر في رقم من ${min} لحد ${max}... وقولّي لمّا تكون جاهز! 🔢`);
+    setProgress(0, false);
+    renderReadyButton(askNumberQuestion);
   }
 
   function renderReadyButton(onReady) {
@@ -132,9 +277,16 @@
     const btn = document.createElement("button");
     btn.className = "btn btn-primary";
     btn.textContent = "جاهز! يلا اسأل 🎯";
-    btn.addEventListener("click", onReady);
+    btn.addEventListener(
+      "click",
+      guard(() => {
+        sound.tap();
+        onReady();
+      })
+    );
     els.answers.appendChild(btn);
     showPanel("question");
+    state.busy = false;
   }
 
   /* ---------------- وضع الرقم ---------------- */
@@ -145,11 +297,12 @@
       revealNumberGuess();
       return;
     }
+    setWizardState("thinking");
     const mid = engine.currentGuess();
-    const total = 100;
+    const total = engine.initialTotal();
     const remaining = engine.high - engine.low + 1;
     const percent = Math.round(100 - (Math.log2(remaining) / Math.log2(total)) * 100);
-    setProgress(Math.max(6, percent), true);
+    setProgress(Math.max(6, percent), true, `المحاولة ${engine.rounds + 1}`);
 
     say(`هل الرقم اللي في دماغك أكبر من ${mid}؟`);
     els.answers.innerHTML = "";
@@ -164,29 +317,37 @@
       const btn = document.createElement("button");
       btn.className = opt.dir === "exact" ? "btn btn-yes" : "btn btn-primary";
       btn.textContent = opt.label;
-      btn.addEventListener("click", () => {
-        engine.answer(opt.dir);
-        if (engine.isSolved()) {
-          revealNumberGuess();
-        } else {
-          askNumberQuestion();
-        }
-      });
+      btn.addEventListener(
+        "click",
+        guard(() => {
+          sound.tap();
+          engine.answer(opt.dir);
+          if (engine.isSolved()) {
+            revealNumberGuess();
+          } else {
+            askNumberQuestion();
+          }
+        })
+      );
       els.answers.appendChild(btn);
     });
+    state.busy = false;
   }
 
   function revealNumberGuess() {
-    setProgress(100, true);
+    setWizardState("thinking");
+    setProgress(100, true, "لحظة سحر...");
     els.answers.innerHTML = "";
     const guess = state.engine.finalAnswer();
     say("قفلت عيني وشُفت الرقم... 🔮✨");
     setTimeout(() => {
+      setWizardState("idle");
       els.guessEmoji.textContent = "🔢";
       els.guessName.textContent = guess;
       showPanel("guess");
       setGuessButtonsEnabled(true);
       say(`رقمك هو ${guess}! صح ولا لأ؟`);
+      state.busy = false;
     }, 900);
   }
 
@@ -200,8 +361,9 @@
       return;
     }
 
+    setWizardState("thinking");
     const q = engine.nextQuestion();
-    setProgress(engine.confidencePercent(), true);
+    setProgress(engine.confidencePercent(), true, `سؤال ${engine.questionsAsked() + 1}`);
     say(q.text);
 
     els.answers.innerHTML = "";
@@ -215,17 +377,23 @@
       const btn = document.createElement("button");
       btn.className = `btn ${opt.cls}`;
       btn.textContent = opt.label;
-      btn.addEventListener("click", () => {
-        engine.answer(q.key, opt.value);
-        askNextQuestion();
-      });
+      btn.addEventListener(
+        "click",
+        guard(() => {
+          sound.tap();
+          engine.answer(q.key, opt.value);
+          askNextQuestion();
+        })
+      );
       els.answers.appendChild(btn);
     });
+    state.busy = false;
   }
 
   function revealEntityGuess() {
     const guess = state.engine.currentGuess();
-    setProgress(state.engine.confidencePercent(), true);
+    setWizardState("thinking");
+    setProgress(state.engine.confidencePercent(), true, "لحظة سحر...");
 
     if (!guess) {
       showLose();
@@ -235,35 +403,54 @@
     els.answers.innerHTML = "";
     say("قفلت عيني وشُفت اللي في دماغك... 🔮✨");
     setTimeout(() => {
+      setWizardState("idle");
       els.guessEmoji.textContent = guess.emoji;
       els.guessName.textContent = guess.name;
       showPanel("guess");
       setGuessButtonsEnabled(true);
       say(`أعتقد إنها... ${guess.name}! صح ولا لأ؟`);
+      state.busy = false;
     }, 900);
   }
 
   /* ---------------- الفوز ---------------- */
 
   function showWin() {
+    setWizardState("happy");
     say("يا سلااام! عرفتها بالسحر! 🎉🧙‍♂️");
+    sound.win();
+    addStar();
     showPanel("win");
     launchConfetti();
+    state.busy = false;
   }
 
-  /* ---------------- الخسارة (للفاكهة/الشخصيات فقط) ---------------- */
+  /* ---------------- الخسارة (لعدم التخمين الصحيح) ---------------- */
 
   function showLose() {
-    say("قلبتها عليّ! بس المرة الجاية هعرفها أكيد 😄");
-    const data = GAME_DATA[state.mode];
-    els.revealList.innerHTML = "";
-    data.entities.forEach((e) => {
-      const chip = document.createElement("span");
-      chip.className = "reveal-chip";
-      chip.textContent = `${e.emoji} ${e.name}`;
-      els.revealList.appendChild(chip);
-    });
+    setWizardState("sad");
+    sound.gentle();
+
+    if (state.mode === "number") {
+      say("معلش! يمكن حصلت لخبطة صغيرة في الإجابات. جرّب تركّز أكتر المرة الجاية يا بطل! 💜");
+      els.loseText.textContent = "مش قادر أوصل للرقم الصح دلوقتي! 🤔";
+      els.revealWrap.hidden = true;
+    } else {
+      say("قلبتها عليّ! بس المرة الجاية هعرفها أكيد 😄");
+      els.loseText.textContent = "كسبتني المرة دي يا بطل! 🌟 قوللي كان ايه؟";
+      els.revealWrap.hidden = false;
+      const data = GAME_DATA[state.mode];
+      els.revealList.innerHTML = "";
+      data.entities.forEach((e) => {
+        const chip = document.createElement("span");
+        chip.className = "reveal-chip";
+        chip.textContent = `${e.emoji} ${e.name}`;
+        els.revealList.appendChild(chip);
+      });
+    }
+
     showPanel("lose");
+    state.busy = false;
   }
 
   function setGuessButtonsEnabled(enabled) {
@@ -280,6 +467,7 @@
     const engine = state.engine;
     engine.rejectCurrentGuess();
     if (engine.canTryAgain()) {
+      setWizardState("thinking");
       say("هممم، خليني أفكر تاني... 🤔");
       setTimeout(() => askNextQuestion(), 500);
     } else {
@@ -336,22 +524,66 @@
 
   /* ---------------- ربط الأحداث ---------------- */
 
-  els.btnStart.addEventListener("click", () => {
-    resetToCategory();
+  els.btnStart.addEventListener("click", guard(resetToCategory));
+
+  document.querySelectorAll("#panelCategory .card").forEach((card) => {
+    card.addEventListener(
+      "click",
+      guard(() => {
+        sound.tap();
+        startMode(card.dataset.mode);
+      })
+    );
   });
 
-  document.querySelectorAll(".card").forEach((card) => {
-    card.addEventListener("click", () => startMode(card.dataset.mode));
+  document.querySelectorAll("#difficultyCards .card").forEach((card) => {
+    card.addEventListener(
+      "click",
+      guard(() => {
+        sound.tap();
+        beginNumberRound(Number(card.dataset.min), Number(card.dataset.max));
+      })
+    );
   });
 
-  els.btnCorrect.addEventListener("click", showWin);
-  els.btnWrong.addEventListener("click", tryAgainAfterWrongGuess);
+  els.btnCorrect.addEventListener(
+    "click",
+    guard(() => {
+      setGuessButtonsEnabled(false);
+      showWin();
+    })
+  );
+  els.btnWrong.addEventListener(
+    "click",
+    guard(() => {
+      tryAgainAfterWrongGuess();
+    })
+  );
 
-  els.btnPlayAgainWin.addEventListener("click", resetToCategory);
-  els.btnPlayAgainLose.addEventListener("click", resetToCategory);
+  els.btnPlayAgainWin.addEventListener("click", guard(resetToCategory));
+  els.btnPlayAgainLose.addEventListener("click", guard(resetToCategory));
+
+  els.btnHelp.addEventListener("click", () => {
+    els.helpOverlay.hidden = false;
+  });
+  els.btnHelpClose.addEventListener("click", () => {
+    els.helpOverlay.hidden = true;
+  });
+  els.helpOverlay.addEventListener("click", (e) => {
+    if (e.target === els.helpOverlay) els.helpOverlay.hidden = true;
+  });
+
+  els.btnMute.addEventListener("click", () => {
+    state.muted = !state.muted;
+    safeSet(STORAGE_KEYS.muted, state.muted ? "1" : "0");
+    renderMuteBtn();
+  });
 
   /* ---------------- البداية ---------------- */
 
   buildStars();
+  renderStars();
+  renderMuteBtn();
+  setWizardState("idle");
   say("مرحبًا يا صديقي الصغير! أنا الساحر مرلين 🧙‍♂️✨ جاهز تلعب معايا؟");
 })();

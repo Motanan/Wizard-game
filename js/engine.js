@@ -99,6 +99,7 @@ class NumberEngine {
   constructor(min = 1, max = 100) {
     this.low = min;
     this.high = max;
+    this.initialRange = max - min + 1;
     this.rounds = 0;
   }
 
@@ -108,6 +109,10 @@ class NumberEngine {
 
   totalRange() {
     return this.high - this.low + 1;
+  }
+
+  initialTotal() {
+    return this.initialRange;
   }
 
   /** direction: 'higher' (الرقم أكبر), 'lower' (الرقم أصغر), 'exact' */

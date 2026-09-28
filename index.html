@@ -18,15 +18,33 @@
 <div class="app">
 
   <header class="app-header">
-    <h1 class="logo"><span class="logo-star">✨</span> الساحر مرلين <span class="logo-star">✨</span></h1>
+    <div class="header-row">
+      <button class="icon-btn" id="btnHelp" aria-label="ازاي نلعب؟" title="ازاي نلعب؟">؟</button>
+      <h1 class="logo"><span class="logo-star">✨</span> الساحر مرلين <span class="logo-star">✨</span></h1>
+      <div class="header-controls">
+        <button class="icon-btn" id="btnMute" aria-label="كتم / تشغيل الصوت" aria-pressed="false" title="الصوت">🔊</button>
+        <div class="stars-badge" id="starsBadge" title="نجومك السحرية">
+          <span aria-hidden="true">⭐</span><span id="starsCount">0</span>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main class="stage">
 
+    <div class="scenery" aria-hidden="true">
+      <div class="moon"></div>
+      <div class="cloud cloud-a"></div>
+      <div class="cloud cloud-b"></div>
+      <svg class="castle" viewBox="0 0 400 90" preserveAspectRatio="none">
+        <path d="M0,90 L0,55 L18,55 L18,38 L32,38 L32,55 L50,55 L50,28 L64,14 L78,28 L78,55 L100,55 L100,42 L114,42 L114,55 L140,55 L140,22 L156,6 L172,22 L172,55 L198,55 L198,40 L212,40 L212,55 L236,55 L236,30 L250,16 L264,30 L264,55 L290,55 L290,44 L302,44 L302,55 L330,55 L330,25 L345,10 L360,25 L360,55 L400,55 L400,90 Z" fill="#1b1044"/>
+      </svg>
+    </div>
+
     <div class="wizard-wrap">
       <div class="wizard-glow" aria-hidden="true"></div>
 
-      <svg class="wizard-svg" id="wizardSvg" viewBox="0 0 240 320" role="img" aria-label="الساحر مرلين">
+      <svg class="wizard-svg" id="wizardSvg" data-state="idle" viewBox="0 0 240 320" role="img" aria-label="الساحر مرلين">
         <defs>
           <radialGradient id="orbGlow" cx="50%" cy="45%" r="60%">
             <stop offset="0%" stop-color="#fff6d8"/>
@@ -94,17 +112,29 @@
           <circle cx="131.4" cy="73" r="1.4" fill="#fff"/>
         </g>
 
-        <path d="M104,96 Q120,107 136,96" stroke="#a35a2d" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <!-- الفم: ثلاث حالات مختلفة حسب مشاعر الساحر -->
+        <path class="mouth mouth-neutral" d="M104,96 Q120,107 136,96" stroke="#a35a2d" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <path class="mouth mouth-happy" d="M99,94 Q120,122 141,94" stroke="#a35a2d" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+        <path class="mouth mouth-sad" d="M105,102 Q120,90 135,102" stroke="#a35a2d" stroke-width="3.4" fill="none" stroke-linecap="round"/>
 
         <!-- الحواجب -->
-        <path d="M99,63 Q107,58 115,62" stroke="#fdfaf3" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <path d="M125,62 Q133,58 141,63" stroke="#fdfaf3" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path class="brow brow-left" d="M99,63 Q107,58 115,62" stroke="#fdfaf3" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path class="brow brow-right" d="M125,62 Q133,58 141,63" stroke="#fdfaf3" stroke-width="3" fill="none" stroke-linecap="round"/>
 
         <!-- القبعة -->
         <path class="hat" d="M120,4 L167,84 Q120,95 73,84 Z" fill="url(#hatGrad)"/>
         <rect x="70" y="79" width="100" height="13" rx="6.5" fill="#f4c95d"/>
         <path class="sparkle sparkle-f" d="M120 28 l2.6 7 7 2.6-7 2.6-2.6 7-2.6-7-7-2.6 7-2.6z" fill="#ffe9a8"/>
         <path class="sparkle sparkle-g" d="M138 52 l2 5.4 5.4 2-5.4 2-2 5.4-2-5.4-5.4-2 5.4-2z" fill="#fff3d0" opacity="0.85"/>
+
+        <!-- انفجار نجوم الاحتفال عند الفوز -->
+        <g class="celebrate-burst" aria-hidden="true">
+          <path d="M60 60 l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ffe9a8" style="animation-delay:0s"/>
+          <path d="M182 66 l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ffd25c" style="animation-delay:.12s"/>
+          <path d="M120 20 l2.6 7 7 2.6-7 2.6-2.6 7-2.6-7-7-2.6 7-2.6z" fill="#fff3d0" style="animation-delay:.06s"/>
+          <path d="M45 150 l2.6 7 7 2.6-7 2.6-2.6 7-2.6-7-7-2.6 7-2.6z" fill="#6fe3ff" style="animation-delay:.18s"/>
+          <path d="M197 150 l2.6 7 7 2.6-7 2.6-2.6 7-2.6-7-7-2.6 7-2.6z" fill="#ff6fb7" style="animation-delay:.24s"/>
+        </g>
       </svg>
 
       <div class="speech-bubble" id="speechBubble">
@@ -114,11 +144,17 @@
 
     <div class="progress-wrap" id="progressWrap" hidden>
       <span class="progress-label">قوة السحر</span>
+      <span class="progress-extra" id="progressExtra"></span>
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
 
     <!-- شاشة الترحيب -->
     <section class="panel active" id="panelWelcome">
+      <div class="howto-row">
+        <div class="howto-step"><span class="howto-icon">🎯</span><span>اختار فئة</span></div>
+        <div class="howto-step"><span class="howto-icon">🤫</span><span>فكّر في حاجة وما تقولهاش!</span></div>
+        <div class="howto-step"><span class="howto-icon">💬</span><span>جاوب بصدق وهو هيخمّن</span></div>
+      </div>
       <button class="btn btn-primary" id="btnStart">يلا نبدأ! 🚀</button>
     </section>
 
@@ -136,6 +172,24 @@
         <button class="card" data-mode="character">
           <span class="card-icon">⭐</span>
           <span class="card-title">شخصية مشهورة</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- شاشة اختيار صعوبة الأرقام -->
+    <section class="panel" id="panelDifficulty" hidden>
+      <div class="cards" id="difficultyCards">
+        <button class="card" data-min="1" data-max="20">
+          <span class="card-icon">🌱</span>
+          <span class="card-title">سهل<br>1 – 20</span>
+        </button>
+        <button class="card" data-min="1" data-max="50">
+          <span class="card-icon">🌟</span>
+          <span class="card-title">متوسط<br>1 – 50</span>
+        </button>
+        <button class="card" data-min="1" data-max="100">
+          <span class="card-icon">🔥</span>
+          <span class="card-title">صعب<br>1 – 100</span>
         </button>
       </div>
     </section>
@@ -161,13 +215,16 @@
     <section class="panel" id="panelWin" hidden>
       <canvas id="confetti"></canvas>
       <div class="win-badge">🎉 عرفتها! 🎉</div>
+      <div class="win-star-line" id="winStarLine">⭐ +1 نجمة سحرية!</div>
       <button class="btn btn-primary" id="btnPlayAgainWin">العب تاني 🔁</button>
     </section>
 
     <!-- شاشة الاستسلام -->
     <section class="panel" id="panelLose" hidden>
-      <p class="lose-text">كسبتني المرة دي يا بطل! 🌟 قوللي كان ايه؟</p>
-      <div class="reveal-list" id="revealList"></div>
+      <p class="lose-text" id="loseText">كسبتني المرة دي يا بطل! 🌟 قوللي كان ايه؟</p>
+      <div class="reveal-wrap" id="revealWrap">
+        <div class="reveal-list" id="revealList"></div>
+      </div>
       <button class="btn btn-primary" id="btnPlayAgainLose">العب تاني 🔁</button>
     </section>
 
@@ -175,6 +232,20 @@
 
   <footer class="app-footer">صُنعت بسحر ✨ للأصدقاء الصغار</footer>
 </div>
+
+<div class="overlay" id="helpOverlay" hidden>
+  <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">ازاي نلعب؟ 🪄</h2>
+    <div class="howto-row">
+      <div class="howto-step"><span class="howto-icon">🎯</span><span>اختار فئة</span></div>
+      <div class="howto-step"><span class="howto-icon">🤫</span><span>فكّر في حاجة وما تقولهاش!</span></div>
+      <div class="howto-step"><span class="howto-icon">💬</span><span>جاوب بصدق وهو هيخمّن</span></div>
+    </div>
+    <button class="btn btn-primary" id="btnHelpClose">تمام، يلا ✨</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="js/data.js"></script>
 <script src="js/engine.js"></script>
