@@ -91,6 +91,92 @@ button {
   50% { opacity: 0.95; transform: scale(1.15); }
 }
 
+/* ---------- الخلفية السحرية (قمر، سحاب، قلعة) ---------- */
+
+.scenery {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.moon {
+  position: absolute;
+  top: 15%;
+  inset-inline-start: 6%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff9e6 0%, #ffe9a8 55%, #ffcf5c 100%);
+  box-shadow: 0 0 50px 14px rgba(255, 233, 168, 0.3);
+  opacity: 0.8;
+}
+
+.cloud {
+  position: absolute;
+  width: 140px;
+  height: 40px;
+  background: rgba(246, 242, 255, 0.06);
+  border-radius: 999px;
+  filter: blur(1px);
+  animation: drift linear infinite;
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.cloud::before {
+  width: 70px;
+  height: 70px;
+  top: -30px;
+  inset-inline-start: 15px;
+}
+
+.cloud::after {
+  width: 50px;
+  height: 50px;
+  top: -20px;
+  inset-inline-end: 20px;
+}
+
+.cloud-a {
+  top: 16%;
+  inset-inline-start: -160px;
+  animation-duration: 70s;
+}
+
+.cloud-b {
+  top: 32%;
+  inset-inline-start: -220px;
+  width: 100px;
+  height: 30px;
+  opacity: 0.7;
+  animation-duration: 95s;
+  animation-delay: -30s;
+}
+
+@keyframes drift {
+  from { transform: translateX(-10vw); }
+  to { transform: translateX(120vw); }
+}
+
+.castle {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 12vh;
+  min-height: 70px;
+  max-height: 130px;
+  opacity: 0.55;
+}
+
 /* ---------- الهيكل العام ---------- */
 
 .app {
@@ -109,14 +195,82 @@ button {
   padding: var(--space-4) 0 var(--space-2);
 }
 
-.logo {
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.icon-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text-light);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  border-color: var(--gold);
+}
+
+.icon-btn:focus-visible {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.stars-badge {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-bg);
+  border: 2px solid var(--gold);
+  border-radius: 999px;
+  padding: 6px 12px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.5rem, 5vw, 2.1rem);
+  font-size: 0.95rem;
+  color: var(--gold-bright);
+}
+
+.stars-badge.bump {
+  animation: star-bump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes star-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+.logo {
+  flex: 1;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.15rem, 5vw, 2.1rem);
   margin: 0;
   color: var(--gold-bright);
   text-shadow: 0 0 18px rgba(255, 207, 92, 0.45);
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .logo-star {
@@ -167,69 +321,82 @@ button {
   z-index: 0;
 }
 
-.wizard-svg {
-  width: clamp(150px, 42vw, 210px);
-  height: auto;
+.wizard-model {
+  width: clamp(190px, 46vw, 250px);
+  height: clamp(235px, 58vw, 310px);
+  display: block;
+  margin: 0 auto;
   position: relative;
   z-index: 1;
-  animation: float 4.5s ease-in-out infinite;
+  background-color: transparent;
+  --poster-color: transparent;
   filter: drop-shadow(0 14px 18px rgba(10, 4, 32, 0.5));
+  animation: wiz-float 4.5s ease-in-out infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@keyframes wiz-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(0deg); }
 }
 
-.wizard-svg .eyes {
-  animation: blink 4.5s ease-in-out infinite;
-  transform-origin: center;
+@keyframes wiz-think {
+  0%, 100% { transform: translateY(-4px) rotate(-2deg); }
+  50% { transform: translateY(-9px) rotate(2deg); }
 }
 
-@keyframes blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
+@keyframes wiz-happy {
+  0%, 100% { transform: translateY(-6px) scale(1.02); }
+  50% { transform: translateY(-17px) scale(1.06); }
 }
 
-.wizard-svg .wave-arm,
-.wizard-svg .wave-hand {
-  animation: wave 2.6s ease-in-out infinite;
-  transform-origin: 74px 182px;
+@keyframes wiz-sad {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(0deg); }
 }
 
-@keyframes wave {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-12deg); }
-  50% { transform: rotate(4deg); }
-  75% { transform: rotate(-8deg); }
+.wizard-wrap[data-state="thinking"] .wizard-model {
+  animation: wiz-think 3.1s ease-in-out infinite;
+}
+.wizard-wrap[data-state="happy"] .wizard-model {
+  animation: wiz-happy 0.85s ease-in-out infinite;
+}
+.wizard-wrap[data-state="sad"] .wizard-model {
+  animation: wiz-sad 4.5s ease-in-out infinite;
 }
 
-.wizard-svg .orb {
-  animation: pulse 2.2s ease-in-out infinite;
-  transform-origin: 190px 108px;
+/* ---------- انفجار نجوم الاحتفال عند الفوز ---------- */
+
+.celebrate-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.12); opacity: 0.85; }
+.burst-star {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  font-size: 1.4rem;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
+.burst-star:nth-child(1) { --dx: -78px; --dy: -70px; }
+.burst-star:nth-child(2) { --dx: 78px; --dy: -78px; }
+.burst-star:nth-child(3) { --dx: -108px; --dy: 4px; }
+.burst-star:nth-child(4) { --dx: 108px; --dy: 10px; }
+.burst-star:nth-child(5) { --dx: -36px; --dy: -128px; }
+.burst-star:nth-child(6) { --dx: 40px; --dy: -132px; }
+
+.wizard-wrap[data-state="happy"] .burst-star {
+  animation: burst-pop 1.1s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.12s);
 }
 
-.wizard-svg .sparkle {
-  animation: sparkle-twinkle 1.8s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.sparkle-a { animation-delay: 0s; }
-.sparkle-b { animation-delay: 0.4s; }
-.sparkle-c { animation-delay: 0.8s; }
-.sparkle-d { animation-delay: 1.2s; }
-.sparkle-e { animation-delay: 0.2s; }
-.sparkle-f { animation-delay: 0.6s; }
-.sparkle-g { animation-delay: 1s; }
-
-@keyframes sparkle-twinkle {
-  0%, 100% { opacity: 0.25; transform: scale(0.7) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1.15) rotate(20deg); }
+@keyframes burst-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.3); }
 }
 
 /* ---------- فقاعة الكلام ---------- */
@@ -302,6 +469,14 @@ button {
   color: var(--text-dim);
   white-space: nowrap;
   font-weight: 600;
+}
+
+.progress-extra {
+  font-size: 0.78rem;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 .progress-bar {
@@ -397,6 +572,37 @@ button {
   background: rgba(255, 207, 92, 0.12);
 }
 
+/* ---------- خطوات اللعب (ترحيب ومساعدة) ---------- */
+
+.howto-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 480px;
+}
+
+.howto-step {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel-bg);
+  border: 1.5px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.howto-icon {
+  font-size: 1.7rem;
+}
+
 /* ---------- شاشة اختيار الفئة ---------- */
 
 .cards {
@@ -448,6 +654,18 @@ button {
   justify-content: center;
   gap: var(--space-3);
   width: 100%;
+}
+
+.answers .btn {
+  animation: btn-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.answers .btn:nth-child(1) { animation-delay: 0s; }
+.answers .btn:nth-child(2) { animation-delay: 0.05s; }
+.answers .btn:nth-child(3) { animation-delay: 0.1s; }
+
+@keyframes btn-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ---------- شاشة التخمين ---------- */
@@ -515,6 +733,19 @@ button {
   100% { transform: scale(1); }
 }
 
+.win-star-line {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-light);
+  background: var(--panel-bg);
+  border: 1.5px solid var(--gold);
+  border-radius: 999px;
+  padding: 6px 18px;
+  z-index: 2;
+  animation: bounce-in 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* ---------- شاشة الاستسلام ---------- */
 
 .lose-text {
@@ -524,6 +755,14 @@ button {
   text-align: center;
   color: var(--text-light);
   margin: 0;
+}
+
+.reveal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
 }
 
 .reveal-list {
@@ -546,6 +785,79 @@ button {
   gap: var(--space-1);
 }
 
+/* ---------- نافذة المساعدة ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(10, 4, 32, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: overlay-in 0.25s ease both;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-card {
+  background: var(--panel-bg);
+  border: 2px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-soft);
+  animation: guess-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.overlay-card h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--gold-bright);
+  text-align: center;
+}
+
+/* ---------- تنبيه صغير (Toast) ---------- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  inset-inline: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 90vw;
+  z-index: 20;
+  background: linear-gradient(135deg, var(--pink), var(--violet));
+  color: var(--text-light);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 22px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ---------- استجابة للشاشات ---------- */
 
 @media (max-width: 420px) {
@@ -554,6 +866,22 @@ button {
   }
   .guess-card {
     padding: var(--space-5) var(--space-5);
+  }
+  .header-row {
+    gap: 6px;
+  }
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+  .stars-badge {
+    font-size: 0.82rem;
+    padding: 5px 9px;
+  }
+  .moon {
+    width: 40px;
+    height: 40px;
   }
 }
 
