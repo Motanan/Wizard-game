@@ -7,13 +7,13 @@ const FRUIT_QUESTIONS = [
   { key: "red", text: "هل لونها أحمر؟" },
   { key: "yellow", text: "هل لونها أصفر؟" },
   { key: "green", text: "هل لونها أخضر؟" },
-  { key: "small", text: "هل هي صغيرة الحجم، ممكن تاكلها بلقمة أو اتنين؟" },
+  { key: "small", text: "هل هي صغيرة الحجم، ممكن تاكلها بلقمة أو اثنين؟" },
   { key: "round", text: "هل شكلها دائري (مدوّر)؟" },
   { key: "peel", text: "هل لازم تقشّرها قبل ما تاكلها؟" },
-  { key: "manySeeds", text: "هل فيها بذور كتير لمّا تفتحها؟" },
-  { key: "tropical", text: "هل بتنمو في البلاد الحارة؟" },
+  { key: "manySeeds", text: "هل فيها بذور كتير لمن تفتحها؟" },
+  { key: "tropical", text: "هل تنمو في البلاد الحارة؟" },
   { key: "sour", text: "هل ممكن يكون طعمها حامض؟" },
-  { key: "juicy", text: "هل هي عصيرية وفيها ميّة كتير؟" },
+  { key: "juicy", text: "هل هي عصيرية وفيها مويه كتير؟" },
 ];
 
 const FRUITS = [
@@ -39,10 +39,10 @@ const CHARACTER_QUESTIONS = [
   { key: "male", text: "هل هي شخصية ولد أو راجل؟" },
   { key: "female", text: "هل هي شخصية بنت أو ست؟" },
   { key: "superpowers", text: "هل عنده قوى خارقة؟" },
-  { key: "cape", text: "هل بيلبس عباءة أو رداء؟" },
+  { key: "cape", text: "هل يلبس عباءة أو رداء؟" },
   { key: "royal", text: "هل هي أميرة أو من عائلة ملكية؟" },
   { key: "cartoon", text: "هل هي من مسلسل كرتون؟" },
-  { key: "mask", text: "هل بتغطي وشها بقناع؟" },
+  { key: "mask", text: "هل تغطي وشها بقناع؟" },
   { key: "colorSkin", text: "هل لون بشرتها أو جسمها غريب، زي أخضر أو أصفر؟" },
 ];
 

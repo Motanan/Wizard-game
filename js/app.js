@@ -8,7 +8,8 @@
 
   const els = {
     stars: document.getElementById("stars"),
-    wizardSvg: document.getElementById("wizardSvg"),
+    wizardWrap: document.getElementById("wizardWrap"),
+    wizardModel: document.getElementById("wizardModel"),
     speechText: document.getElementById("speechText"),
     speechBubble: document.getElementById("speechBubble"),
     progressWrap: document.getElementById("progressWrap"),
@@ -82,10 +83,25 @@
     }
   }
 
-  /* ---------------- تعابير وجه الساحر ---------------- */
+  /* ---------------- وضعيات نموذج الساحر ثلاثي الأبعاد ---------------- */
+
+  const MODEL_SRC = {
+    idle: "assets/models/merlin-idle.glb",
+    thinking: "assets/models/merlin-thinking.glb",
+    happy: "assets/models/merlin-happy.glb",
+    sad: "assets/models/merlin-sad.glb",
+  };
+
+  let currentWizardPose = "idle";
 
   function setWizardState(name) {
-    els.wizardSvg.dataset.state = name;
+    els.wizardWrap.dataset.state = name;
+    if (currentWizardPose === name) return;
+    currentWizardPose = name;
+    const src = MODEL_SRC[name] || MODEL_SRC.idle;
+    if (els.wizardModel.getAttribute("src") !== src) {
+      els.wizardModel.setAttribute("src", src);
+    }
   }
 
   /* ---------------- الصوت (اختياري وقابل للكتم) ---------------- */
@@ -237,7 +253,7 @@
     state.engine = null;
     setWizardState("idle");
     setProgress(0, false);
-    say("اختار حاجة يا صاحبي، وأنا هخمّنها بالسحر! 🔮");
+    say("اختار حاجة يا زول، وأنا حا أخمّنها بالسحر! 🔮");
     showPanel("category");
     state.busy = false;
   }
@@ -259,7 +275,7 @@
     const data = GAME_DATA[mode];
     state.engine = new GuessEngine(data.questions, data.entities);
     setWizardState("idle");
-    say(`فكّر في ${data.noun}، وأنا هبدأ أسألك أسئلة! 🧠`);
+    say(`فكّر في ${data.noun}، وأنا حابدأ أسألك أسئلة! 🧠`);
     setProgress(4, true, "سؤال 1");
     renderReadyButton(askNextQuestion);
   }
@@ -267,7 +283,7 @@
   function beginNumberRound(min, max) {
     state.engine = new NumberEngine(min, max);
     setWizardState("idle");
-    say(`فكّر في رقم من ${min} لحد ${max}... وقولّي لمّا تكون جاهز! 🔢`);
+    say(`فكّر في رقم من ${min} لغاية ${max}... وقوللي لمن تكون جاهز! 🔢`);
     setProgress(0, false);
     renderReadyButton(askNumberQuestion);
   }
@@ -310,7 +326,7 @@
     const options = [
       { label: "أكبر 🔼", dir: "higher" },
       { label: "أصغر 🔽", dir: "lower" },
-      { label: "ده هو بالظبط! 🎯", dir: "exact" },
+      { label: "ده هو بالضبط! 🎯", dir: "exact" },
     ];
 
     options.forEach((opt) => {
@@ -417,7 +433,7 @@
 
   function showWin() {
     setWizardState("happy");
-    say("يا سلااام! عرفتها بالسحر! 🎉🧙‍♂️");
+    say("يا سلام يا زول! عرفتها بالسحر! 🎉🧙‍♂️");
     sound.win();
     addStar();
     showPanel("win");
@@ -432,12 +448,12 @@
     sound.gentle();
 
     if (state.mode === "number") {
-      say("معلش! يمكن حصلت لخبطة صغيرة في الإجابات. جرّب تركّز أكتر المرة الجاية يا بطل! 💜");
-      els.loseText.textContent = "مش قادر أوصل للرقم الصح دلوقتي! 🤔";
+      say("معلش! يمكن حصلت لخبطة صغيرة في الإجابات. جرّب تركّز أكتر المرة الجاية يا زول! 💜");
+      els.loseText.textContent = "ما قادر أوصل للرقم الصح هسه! 🤔";
       els.revealWrap.hidden = true;
     } else {
-      say("قلبتها عليّ! بس المرة الجاية هعرفها أكيد 😄");
-      els.loseText.textContent = "كسبتني المرة دي يا بطل! 🌟 قوللي كان ايه؟";
+      say("غلبتني المرة دي! بس المرة الجاية حاعرفها أكيد 😄");
+      els.loseText.textContent = "غلبتني المرة دي يا زول! 🌟 قول لي كانت شنو؟";
       els.revealWrap.hidden = false;
       const data = GAME_DATA[state.mode];
       els.revealList.innerHTML = "";
@@ -585,5 +601,5 @@
   renderStars();
   renderMuteBtn();
   setWizardState("idle");
-  say("مرحبًا يا صديقي الصغير! أنا الساحر مرلين 🧙‍♂️✨ جاهز تلعب معايا؟");
+  say("أهلين يا زول الصغير! أنا الساحر مرلين 🧙‍♂️✨ داير تلعب معاي؟");
 })();
